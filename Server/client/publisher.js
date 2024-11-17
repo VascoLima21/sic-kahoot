@@ -3,7 +3,7 @@ const mqtt = require("mqtt");
 var mqttClient;
 
 // Configurações do broker MQTT
-const mqttHost = "test.mosquitto.org"; // Altere para o IP/host do seu broker
+const mqttHost = "test.mosquitto.org";
 const protocol = "mqtt";
 const port = "1883";
 
