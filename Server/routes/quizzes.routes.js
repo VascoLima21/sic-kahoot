@@ -2,15 +2,21 @@ const express = require('express');
 const router = express.Router();
 
 // import users controller
-const { addQuizz, getQuizzes, getQuizzQuestions, getQuestionAnswers } = require("../controllers/quizzes.controller");
+const { addQuizz, getQuizzes, getQuizzQuestions, getQuestionAnswers, subscribeToQuizz, publishQuestions } = require("../controllers/quizzes.controller");
 const { verifyAdmin } = require("../middlewares/jwt");
 
 router.route('/')
     .post(verifyAdmin, addQuizz)
     .get(getQuizzes)
 
+router.route('/:quizzId/subscribe')
+    .post(subscribeToQuizz)
+
 router.route('/:quizzId/questions')
     .get(getQuizzQuestions)
+
+router.route('/:quizzId/publishQuestions')
+    .post(publishQuestions)
 
 router.route('/:quizzId/questions/:questionId/answers')
     .get(getQuestionAnswers)
