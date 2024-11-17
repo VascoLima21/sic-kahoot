@@ -1,9 +1,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../connection');
 
-const UserQuiz = sequelize.define('UserQuiz', 
+const UserQuizz = sequelize.define('UserQuizz', 
     {
-        quizId: {
+        quizzId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             primaryKey: true,
@@ -31,4 +31,4 @@ const UserQuiz = sequelize.define('UserQuiz',
     }
 );
 
-module.exports = UserQuiz;
+module.exports = UserQuizz;
