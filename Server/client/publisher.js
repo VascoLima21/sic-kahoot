@@ -2,15 +2,14 @@ const mqtt = require("mqtt");
 
 var mqttClient;
 
-// Mosquitto broker info
-const mqttHost = "192.168.100.22";
+// Configurações do broker MQTT
+const mqttHost = "test.mosquitto.org"; // Altere para o IP/host do seu broker
 const protocol = "mqtt";
 const port = "1883";
 
 function connectToBroker() {
   const clientId = "client" + Math.random().toString(36).substring(7);
 
-  // Change this to point to your MQTT broker
   const hostURL = `${protocol}://${mqttHost}:${port}`;
 
   const options = {
@@ -35,10 +34,24 @@ function connectToBroker() {
   });
 
   mqttClient.on("connect", () => {
-    console.log("Client connected:" + clientId);
+    console.log("Client connected: " + clientId);
+
+    // Publicar uma mensagem de exemplo após a conexão ser bem-sucedida
+    publishMessage("Quizzes/QuizzCapitals/Pergunta1", JSON.stringify({
+      pergunta: "Qual é a capital da França?",
+      opcoes: ["Paris", "Marselha", "Lyon"],
+      correta: "Paris"
+    }));
+
+    // Outra mensagem de exemplo
+    publishMessage("Quizzes/QuizzCapitals/Pergunta2", JSON.stringify({
+      pergunta: "Qual é a capital da Espanha?",
+      opcoes: ["Madrid", "Barcelona", "Sevilha"],
+      correta: "Madrid"
+    }));
   });
 
-  // Received Message
+  // Receber mensagens para debug (opcional)
   mqttClient.on("message", (topic, message, packet) => {
     console.log(
       "Received Message: " + message.toString() + "\nOn topic: " + topic
@@ -47,7 +60,7 @@ function connectToBroker() {
 }
 
 function publishMessage(topic, message) {
-  console.log(`Sending Topic: ${topic}, Message: ${message}`);
+  console.log(`Enviando Tópico: ${topic}, Mensagem: ${message}`);
   mqttClient.publish(topic, message, {
     qos: 0,
     retain: false,
@@ -55,5 +68,3 @@ function publishMessage(topic, message) {
 }
 
 connectToBroker();
-
-publishMessage("maths", "quiz1")

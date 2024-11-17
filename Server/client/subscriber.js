@@ -1,9 +1,9 @@
 const mqtt = require("mqtt");
 
-var mqttClient;
+let mqttClient;
 
 // Conecção Mosquitto
-const mqttHost = "192.168.100.22";
+const mqttHost = "test.mosquitto.org";
 const protocol = "mqtt";
 const port = "1883";
 
@@ -39,18 +39,28 @@ function connectToBroker() {
   });
 
   // Received Message
-  mqttClient.on("message", (topic, message, packet) => {
-    console.log(
-      "Received Message: " + message.toString() + "\nOn topic: " + topic
-    );
+  mqttClient.on("message", (topic, message) => {
+    try {
+      const parsedMessage = JSON.parse(message.toString());
+      console.log("Received Message Object:", parsedMessage);
+
+      if (topic.startsWith("Quizzes/Quiz1/Respostas")) {
+        // Lógica para processar respostas
+        console.log("Player Response Received:", parsedMessage);
+      } else if (topic.startsWith("Quizzes/Quiz1/Pergunta")) {
+        // Lógica para processar perguntas
+        console.log("New Quiz Question Received:", parsedMessage);
+      }
+    } catch (e) {
+      console.error("Error parsing message:", e);
+    }
   });
 }
 
 function subscribeToTopic(topic) {
   console.log(`Subscribing to Topic: ${topic}`);
-
   mqttClient.subscribe(topic, { qos: 0 });
 }
 
 connectToBroker();
-subscribeToTopic("maths");
+subscribeToTopic("Quizzes/#"); // Subscreve a todos os sub-tópicos de Quizzes
