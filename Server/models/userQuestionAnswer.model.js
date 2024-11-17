@@ -3,7 +3,7 @@ const sequelize = require('../../connection');
 
 const UserQuestionAnswer = sequelize.define('UserQuestionAnswer', 
     {
-        quizId: {
+        quizzId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             primaryKey: true,

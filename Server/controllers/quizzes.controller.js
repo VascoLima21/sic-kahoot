@@ -1,53 +1,54 @@
-const { User, Quizz, UserQuizz, Question, QuestionAnswer } = require('../models/index');
+// Controller logic to create a new quiz
+const { Quizz, UserQuizz, Question, QuestionAnswer, User } = require('../models');
+const mqttClient = require('../service/mqttClient'); // Assuming an MQTT client is set up
 
-router.post('/quizzes', async (req, res) => {
-    const { userId, title, theme, questions } = req.body;
-  
-    try {
-      const user = await User.findByPk(userId);
-      if (!user) {
-        return res.status(404).send({ message: 'User Not Found' });
-      }
-  
-      // Cria um novo quiz com tema
-      const newQuizz = await Quizz.create({ title, theme });
-  
-      // Relaciona o user ao quiz (quem criou)
-      await UserQuizz.create({ userId: user.id, quizzId: newQuizz.id });
-  
-      // Adiciona perguntas e respostas
-      for (const questionData of questions) {
-        const newQuestion = await Question.create({ 
-          quizzId: newQuizz.id, 
-          text: questionData.text 
-        });
-  
-        for (const answerData of questionData.answers) {
-          await QuestionAnswer.create({ 
-            questionId: newQuestion.id, 
-            text: answerData.text, 
-            isCorrect: answerData.isCorrect 
-          });
+module.exports = {
+    addQuizz: async (req, res) => {
+        const { userId, theme, questions } = req.body;
+        try {
+            // Step 1: Create or find an existing quiz with the given theme
+            let newQuizz = await Quizz.create({ theme });
+            console.log(newQuizz.quizzId);
+
+            // Step 2: Associate the quiz with the user who created it
+            await UserQuizz.create({
+                quizzId: newQuizz.quizzId,
+                userId: userId,
+            });
+
+            // Step 3: Add questions and answers to the quiz
+            for (const questionData of questions) {
+                const newQuestion = await Question.create({
+                    quizzId: newQuizz.quizzId,
+                    questionText: questionData.questionText,
+                    answerTime: questionData.answerTime,
+                });
+
+                for (const answerData of questionData.answers) {
+                    await QuestionAnswer.create({
+                        questionId: newQuestion.questionId,
+                        answerText: answerData.answerText,
+                        isCorrect: answerData.isCorrect,
+                    });
+                }
+            }
+
+            // Step 4: Publish the quiz to the MQTT topic
+            const mqttTopic = `Quizzes/${theme}`;
+            const quizzPayload = {
+                id: newQuizz.quizzId,
+                theme: newQuizz.theme,
+                questions: questions.map(q => ({
+                    text: q.questionText,
+                    answers: q.answers.map(a => a.answerText),
+                })),
+            };
+            mqttClient.publish(mqttTopic, JSON.stringify(quizzPayload));
+
+            res.status(201).json({ message: 'Quizz created successfully!', quizzId: newQuizz.quizzId });
+        } catch (error) {
+            console.error('Error creating quiz:', error);
+            res.status(500).json({ error: 'An error occurred while creating the quiz' });
         }
-      }
-  
-      // Publica o quiz no MQTT no tópico `Quizzes/<Theme>`
-      const topic = `Quizzes/${theme}`;
-      const quizPayload = {
-        id: newQuizz.id,
-        title: newQuizz.title,
-        theme: newQuizz.theme,
-        questions: questions.map(q => ({
-          text: q.text,
-          answers: q.answers.map(a => a.text)
-        }))
-      };
-      mqttClient.publish(topic, JSON.stringify(quizPayload));
-  
-      res.status(201).json({ message: 'Quiz criado com sucesso!', quizId: newQuizz.id });
-    } catch (error) {
-      console.error('Erro ao criar o quiz:', error);
-      res.status(500).json({ error: 'Erro ao criar o quiz' });
     }
-  });
-  
+}

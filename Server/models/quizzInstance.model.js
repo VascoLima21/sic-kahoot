@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../connection')
 
-const QuizInstance = sequelize.define("QuizInstance",
+const QuizzInstance = sequelize.define("QuizzInstance",
     {
         instanceId: {
             type: DataTypes.INTEGER,
@@ -19,4 +19,4 @@ const QuizInstance = sequelize.define("QuizInstance",
     }
 );
 
-module.exports = QuizInstance;
+module.exports = QuizzInstance;
