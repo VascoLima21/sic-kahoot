@@ -43,7 +43,7 @@ function connectToBroker() {
     try {
       const parsedMessage = JSON.parse(message.toString());
       console.log("Received Message Object:", parsedMessage);
-
+      
       if (topic.startsWith("Quizzes/Quiz1/Respostas")) {
         // Lógica para processar respostas
         console.log("Player Response Received:", parsedMessage);
@@ -63,4 +63,4 @@ function subscribeToTopic(topic) {
 }
 
 connectToBroker();
-subscribeToTopic("Quizzes/#"); // Subscreve a todos os sub-tópicos de Quizzes
+// subscribeToTopic("Quizzes/#"); // Subscreve a todos os sub-tópicos de Quizzes
