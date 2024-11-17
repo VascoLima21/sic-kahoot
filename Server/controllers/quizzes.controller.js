@@ -1,6 +1,7 @@
-// Controller logic to create a new quiz
 const { Quizz, UserQuizz, Question, QuestionAnswer, User } = require('../models');
 const mqttClient = require('../service/mqttClient'); // Assuming an MQTT client is set up
+const { handleServerError } = require('../utilities/errors');
+const Sequelize = require('sequelize')
 
 module.exports = {
     addQuizz: async (req, res) => {
@@ -49,6 +50,50 @@ module.exports = {
         } catch (error) {
             console.error('Error creating quiz:', error);
             res.status(500).json({ error: 'An error occurred while creating the quiz' });
+        }
+    },
+    getQuizzes: async (req, res) => {
+        try {
+            const quizzes = await Quizz.findAll({
+                include: [{
+                    model: User,
+                    attributes: ['userId', 'username']
+                }],
+                attributes: ['quizzId','theme']
+            })
+            if (quizzes) {
+                return res.status(200).send({
+                    quizzes: quizzes
+                })
+            }
+        } catch (error) {
+            handleServerError(error, res)
+        }
+    },
+    getQuizzQuestions: async (req, res) => {
+        const { quizzId } = req.params
+        try {
+            const questions = await Question.findAll({where: { quizzId: quizzId}})
+            if (questions) {
+                return res.status(200).send({
+                    questions: questions
+                })
+            }
+        } catch (error) {
+            handleServerError(error, res)
+        }
+    },
+    getQuestionAnswers: async (req, res) => {
+        const { questionId } = req.params
+        try {
+            const answers = await QuestionAnswer.findAll({where: { questionId: questionId}})
+            if (answers) {
+                return res.status(200).send({
+                    answers: answers
+                })
+            }
+        } catch (error) {
+            handleServerError(error, res)
         }
     }
 }
