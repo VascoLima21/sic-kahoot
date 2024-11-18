@@ -1,7 +1,7 @@
 const { Quizz, UserQuizz, Question, QuestionAnswer, User } = require('../models');
-const { mqttClient, subscribeWhenConnected } = require('../service/mqttClient'); // Assuming an MQTT client is set up
+const { mqttClient } = require('../service/mqttClient'); // Assuming an MQTT client is set up
 const { handleServerError } = require('../utilities/errors');
-const Sequelize = require('sequelize')
+const { publishMessage, subscribeToTopic } = require('../service/mqttService')
 
 module.exports = {
     addQuizz: async (req, res) => {
@@ -97,15 +97,21 @@ module.exports = {
         }
     },
     subscribeToQuizz: async (req, res) => {
-        const { quizzId } = req.params
+        const { quizzId } = req.params;
         try {
-            const quizz = await Quizz.findByPk(quizzId)
-            const topic = `Quizzes/${quizz.theme}/${quizzId}`
+            const quizz = await Quizz.findByPk(quizzId);
+            if (!quizz) {
+                return res.status(404).send({ message: 'Quiz não encontrado.' });
+            }
 
-            subscribeWhenConnected(topic);
-            res.status(200).send({ message: 'Inscrição realizada com sucesso.' });
+            const topic = `Quizzes/${quizz.theme}/${quizzId}/questions`;
+            subscribeToTopic(topic);
+
+            res.status(200).send({ message: `Inscrito com sucesso no tópico ${topic}.` });
+
         } catch (error) {
-            handleServerError(error, res)
+            console.error('Erro ao se inscrever no quiz:', error);
+            res.status(500).send({ error: 'Erro ao se inscrever no quiz.' });
         }
     },
     publishQuestions: async (req, res) => {
@@ -127,16 +133,11 @@ module.exports = {
                 }]
             });
 
-            // Verificar se o quiz tem perguntas
-            if (!questions || questions.length === 0) {
-                return res.status(404).send({ message: 'Nenhuma pergunta encontrada para este quiz.' });
-            }
-
-            // Criar o tópico no MQTT
+            // Criar o tópico MQTT
             const topic = `Quizzes/${quizz.theme}/${quizzId}/questions`;
 
-            // Publicar cada pergunta no tópico MQTT
-            for (const question of questions) {
+            // Publicar cada pergunta no tópico
+            questions.forEach((question) => {
                 const questionPayload = {
                     questionId: question.questionId,
                     question: question.questionText,
@@ -146,17 +147,10 @@ module.exports = {
                     answerTime: question.answerTime,
                 };
 
-                // Publicar a pergunta no tópico MQTT
-                mqttClient.publish(topic, JSON.stringify(questionPayload), { qos: 0 }, (err) => {
-                    if (err) {
-                        console.error('Erro ao publicar a pergunta no MQTT:', err);
-                        return res.status(500).send({ message: 'Erro ao publicar a pergunta no MQTT.' });
-                    }
-                    console.log(`Pergunta ${question.questionId} publicada com sucesso no tópico: ${topic}`);
-                });
-            }
+                // Chamar a função de publicação
+                publishMessage(topic, JSON.stringify(questionPayload));
+            });
 
-            // Responder ao cliente indicando que as perguntas foram publicadas
             res.status(200).json({
                 message: 'Perguntas publicadas com sucesso.',
                 questions: questions.map(q => q.questionText),

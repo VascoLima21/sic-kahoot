@@ -3,25 +3,28 @@ const mqtt = require('mqtt');
 // Conectar ao broker MQTT com o protocolo mqtt://
 const mqttClient = mqtt.connect('mqtt://test.mosquitto.org');
 
-let topicQueue = [];
+mqttClient.on('message', (topic, message) => {
+    try {
+        const parsedMessage = JSON.parse(message.toString());
+        console.log(`\nMensagem recebida no tópico: ${topic}`);
+        console.log('-------------------------------');
 
-const subscribeWhenConnected = (topic) => {
-    if (mqttClient.connected) {
-        mqttClient.subscribe(topic, { qos: 0 }, (err) => {
-            if (err) {
-                console.error('Erro ao se inscrever no tópico:', err);
-            } else {
-                console.log(`Inscrito com sucesso no tópico: ${topic}`);
-            }
+        // Exibir a pergunta
+        console.log(`Pergunta: ${parsedMessage.question}`);
+
+        // Exibir as respostas
+        console.log('Respostas:');
+        parsedMessage.answers.forEach((answer, index) => {
+            console.log(`  ${index + 1}. ${answer.answerText}`);
         });
-    } else {
-        topicQueue.push(topic);
-    }
-};
 
-// Configuração dos eventos de callback
-mqttClient.on('connect', () => {
-    console.log('MQTT client connected');
+        // Exibir o tempo de resposta
+        console.log(`Tempo de resposta: ${parsedMessage.answerTime} segundos`);
+
+        console.log('-------------------------------\n');
+    } catch (e) {
+        console.error('Erro ao processar a mensagem:', e);
+    }
 });
 
 mqttClient.on('error', (err) => {
@@ -30,7 +33,7 @@ mqttClient.on('error', (err) => {
 });
 
 mqttClient.on('close', () => {
-    console.log('MQTT client disconnected');
+    console.log('Cliente MQTT desconectado');
 });
 
-module.exports = { mqttClient, subscribeWhenConnected };
+module.exports = { mqttClient };
