@@ -1,9 +1,14 @@
-// services/mqttService.js
-const {mqttClient} = require('./mqttClient');
+const { mqttClient } = require('./mqttClient');
 
-// Função para publicar uma mensagem
+// Função para publicar uma mensagem no MQTT
 const publishMessage = (topic, message) => {
-  mqttClient.publish(topic, message, { qos: 0 });
+  mqttClient.publish(topic, message, { qos: 0 }, (err) => {
+    if (err) {
+      console.error(`Erro ao publicar mensagem no tópico ${topic}:`, err);
+    } else {
+      console.log(`Mensagem publicada no tópico ${topic}`);
+    }
+  });
 };
 
 // Função para se inscrever em um tópico
@@ -16,11 +21,5 @@ const subscribeToTopic = (topic) => {
     }
   });
 };
-
-// Função para receber mensagens
-mqttClient.on('message', (topic, message) => {
-  console.log(`Mensagem recebida no tópico: ${topic}`);
-  console.log('Mensagem:', message.toString());
-});
 
 module.exports = { publishMessage, subscribeToTopic };
