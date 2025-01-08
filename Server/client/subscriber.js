@@ -10,7 +10,6 @@ const port = "1883";
 function connectToBroker() {
   const clientId = "client" + Math.random().toString(36).substring(7);
 
-  // Change this to point to your MQTT broker
   const hostURL = `${protocol}://${mqttHost}:${port}`;
 
   const options = {

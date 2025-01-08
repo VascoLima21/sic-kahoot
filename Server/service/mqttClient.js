@@ -1,6 +1,6 @@
 const mqtt = require('mqtt');
 
-// Conectar ao broker MQTT com o protocolo mqtt://
+// Conectar ao broker MQTT
 const mqttClient = mqtt.connect('mqtt://test.mosquitto.org');
 
 mqttClient.on('message', (topic, message) => {
