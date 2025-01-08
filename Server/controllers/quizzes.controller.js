@@ -121,7 +121,7 @@ module.exports = {
             // Encontrar o quiz pelo ID
             const quizz = await Quizz.findByPk(quizzId);
             if (!quizz) {
-                return res.status(404).send({ message: 'Quiz não encontrado.' });
+                return res.status(404).send({ message: 'Quizz não encontrado.' });
             }
 
             // Recuperar todas as perguntas associadas a esse quiz
